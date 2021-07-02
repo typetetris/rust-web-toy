@@ -1,0 +1,12 @@
+[package]
+name = "web-toy"
+version = "0.1.0"
+authors = ["Eric Wolf <eric.wolf@lindenbaum.eu>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "3"
+tokio = { version = "0.2", features = [ "full" ] }
+futures-util = "0.3"
