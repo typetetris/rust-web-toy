@@ -1,9 +1,17 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
 use futures_util::stream::StreamExt;
 
-async fn manual_hello(mut body: web::Payload, web::Path(filename): web::Path<String>) -> impl Responder {
+async fn manual_hello(mut body: web::Payload,
+                      web::Path(filename): web::Path<String>,
+                      req: HttpRequest) -> impl Responder {
+    println!("********************************************************************************");
+    println!("                              NEXT REQUEST");
+    println!("********************************************************************************");
+    req.headers().iter().for_each(|v| {
+        println!("{}: {:?}", v.0, v.1)
+    });
     let mut file = OpenOptions::new().write(true).append(true).create(true).open(filename).await.unwrap();
     while let Some(item) = body.next().await {
         let bytes = item.unwrap();
