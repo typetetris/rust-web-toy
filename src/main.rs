@@ -1,11 +1,11 @@
-use std::ops::Add;
-use std::sync::RwLock;
-use std::sync::Arc;
 use actix_web::{web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use futures_util::stream::StreamExt;
+use std::ops::Add;
+use std::sync::Arc;
+use std::sync::RwLock;
+use structopt::StructOpt;
 use tokio::fs::OpenOptions;
 use tokio::io::AsyncWriteExt;
-use structopt::StructOpt;
 
 #[derive(Debug, StructOpt)]
 #[structopt()]
@@ -74,20 +74,29 @@ async fn main() -> std::io::Result<()> {
                     let mut handle = guarded_counter_for_background_thread.write().unwrap();
                     *handle += 1;
                 }
-                tokio::time::delay_until(tokio::time::Instant::now().add(tokio::time::Duration::from_millis(250))).await;
+                tokio::time::delay_until(
+                    tokio::time::Instant::now().add(tokio::time::Duration::from_millis(250)),
+                )
+                .await;
             }
         });
     }
     let mut server = HttpServer::new(move || {
         App::new()
             .data(guarded_counter.clone())
-//            .service(web::resource("/upload/{file}").route(web::post().to(file_upload)))
-//            .route("/error", web::post().to(produce_error_response))
+            //            .service(web::resource("/upload/{file}").route(web::post().to(file_upload)))
+            //            .route("/error", web::post().to(produce_error_response))
             .route("/counter", web::get().to(read_the_counter))
             .route("/noop", web::get().to(noop))
     });
     for addr in opt.socket_addrs.iter() {
         server = server.bind(addr).unwrap();
     }
-    server.run().await
+    server
+        .client_timeout(std::u64::MAX)
+        .client_shutdown(std::u64::MAX)
+        .max_connections(std::usize::MAX)
+        .max_connection_rate(std::usize::MAX)
+        .run()
+        .await
 }
